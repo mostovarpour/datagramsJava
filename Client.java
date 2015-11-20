@@ -83,6 +83,8 @@ public class Client{
         //Sending the user's input to the server
         sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
         clientSocket.send(sendPacket);
+
+        //Clearing the buffer
         Arrays.fill(buf, (byte)0);
         
         //Receiving the input back from ther server
@@ -94,6 +96,44 @@ public class Client{
         System.out.println("Received from the server: " + incomingMesg);
     }
     public static void dnsLookup(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
+        //Creating our BufferedReader and DatagramPackets for sending and receiving
+        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+        DatagramPacket sendPacket, recPacket;
+        String incomingMesg;
+
+        //This is our buffer
+        byte[] buf = new byte[buflen];
+
+        //setting the first char of the buffer to 2 so the server knows what to do
+        buf = ("2").trim().getBytes();
+
+        //Sending the command to the server
+        sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
+        clientSocket.send(sendPacket);
+
+        //Clearing the buffer
+        Arrays.fill(buf, (byte)0);
+
+        //Prompting the user for input
+        System.out.print("Enter the domain you would like to look up: ");
+
+        //Storing the user's input
+        buf = userInput.readLine().trim().getBytes();
+
+        //Sending the user's input to the server
+        sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
+        clientSocket.send(sendPacket);
+
+        //Clearing the buffer
+        Arrays.fill(buf, (byte)0);
+
+        //Receiving the packet from the server
+        recPacket = new DatagramPacket(buf, buf.length);
+        clientSocket.receive(recPacket);
+
+        //Turning back into a string
+        incomingMesg = new String(recPacket.getData());
+        System.out.println("Your address resolved to " + incomingMesg);
 
     }
     public static void serverTime(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
