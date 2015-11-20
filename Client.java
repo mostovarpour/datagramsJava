@@ -93,7 +93,7 @@ public class Client{
         
         //Turning the bytes back into a string
         incomingMesg = new String(recPacket.getData());
-        System.out.println("Received from the server: " + incomingMesg);
+        System.out.println("Received from the server: " + incomingMesg + "\n");
     }
     public static void dnsLookup(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
         //Creating our BufferedReader and DatagramPackets for sending and receiving

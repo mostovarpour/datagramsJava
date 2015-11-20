@@ -28,7 +28,7 @@ public class Server{
 		DatagramPacket recPacket;
 
 		//Here we define our buffer for receiving what to do
-		byte[] recBuff = new byte[buflen];
+		byte[] recBuff;
 		
 
 		//This while loop is for the server to always continue processing requests
@@ -38,13 +38,15 @@ public class Server{
 			System.out.println("Waiting for data...");
 			
 			//Clear out the buffer before use each time
-			Arrays.fill(recBuff, (byte)0);
+			//Arrays.fill(recBuff, (byte)0);
+			recBuff = new byte[buflen];
 
 			//First need to receive datagram to know what service was requested
 			recPacket = new DatagramPacket(recBuff, recBuff.length);
 			
 			//Attempt to receive datagram from the server socket and store in receive packet
 			serverSocket.receive(recPacket);
+			
 			
 			//recBuff[0] should now contain the requested service
 			// 1 = Echo the next datagram message
@@ -89,6 +91,9 @@ public class Server{
 		//Get the IP address to send a reply back to client
 		InetAddress ipAddress = recPacket.getAddress();
 		
+		//Get the port to send back to
+		int sendPort = recPacket.getPort();
+		
 		//Extract the message to echo back and store in temporary string
 		String echoMe = new String(recPacket.getData());
 		
@@ -100,9 +105,9 @@ public class Server{
 		buf = echoMe.getBytes();
 		
 		//Create the datagram packet to send back to client and then send it
-		DatagramPacket sendMe = new DatagramPacket(buf, buf.length, ipAddress, port);
+		DatagramPacket sendMe = new DatagramPacket(buf, buf.length, ipAddress, sendPort);
 		serverSocket.send(sendMe);
-
+		
 	}
 	
 	
