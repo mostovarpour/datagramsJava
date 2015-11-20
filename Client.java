@@ -1,166 +1,178 @@
 /*
  * Matthew Ostovarpour
- * Daniel Durazp
+ * Daniel Durazo
  * 11/19/15
  * Datagram client in Java
  */
 
 import java.net.*;
 import java.io.*;
-import java.util.*;
 
 public class Client{
-    //The port that we will connect on
-    protected static int port = 23657;
-    protected static int buflen = 512;
+	//The port that we will connect on
+	protected static int port = 23657;
+	protected static int buflen = 512;
 
-    //This is our main funciton
-    public static void main(String[] args) throws Exception{
-        //This is a BufferedReader to take input from the commadn line
-        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+	//This is our main function
+	//Network code can throw an exception
+	public static void main(String[] args) throws IOException{
 
-        //Here we create the client socket
-        try (DatagramSocket clientSocket = new DatagramSocket()){
-            InetAddress IPAddress = InetAddress.getByName("localhost");
+		//This is a BufferedReader to take input from the command line
+		BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
 
-            //Here we define our buffer
-            byte[] recieveBuff = new byte[buflen];
-            byte[] sendBuff = new byte[buflen];
-            int stillGoing = 1, select;
+		//Here we create the client socket 
+		DatagramSocket clientSocket = new DatagramSocket();
+		InetAddress IPAddress = InetAddress.getByName("localhost");
 
-            //This while loop is for the client
-            while (stillGoing == 1){
-                select = 0;
+		//User will select from a menu, store it in this variable
+		int select;
 
-                //This is a small options menu for the user
-                System.out.println("==========Datagram Client==========");
-                System.out.println("+         1. Echo Server          +");
-                System.out.println("+         2. DNS Lookup Service   +");
-                System.out.println("+         3. Get server time      +");
-                System.out.println("+         4. Quit                 +");
-                System.out.println("===================================");
-                System.out.print("What would you like to do: ");
-                
-                //Getting the input from the user
-                select = Integer.parseInt(userInput.readLine());
+		//This while loop is for the client
+		while (true){
 
-                //This will tell the server what the user wants to do
-                if (select == 1) echoServer(clientSocket, IPAddress);
-                else if (select == 2) dnsLookup(clientSocket, IPAddress);
-                else if (select == 3) serverTime(clientSocket, IPAddress);
-                else if (select == 4) stillGoing = 0;
-                else System.out.println("You must enter 1 or 2 or 3 or 4.");
-            }
-        }catch (IOException e){}
-    }
+			//This is a small options menu for the user
+			System.out.println("+--------- Java Datagram Client ---------+");
+			System.out.println("|     1. Echo Server                     |");
+			System.out.println("|     2. DNS Lookup Service              |");
+			System.out.println("|     3. Get server time                 |");
+			System.out.println("|     4. Quit                            |");
+			System.out.println("+----------------------------------------+");
+			System.out.print("What would you like to do: ");
 
-    //This is our echo server method which takes in the clientSocket and IPAddress as parameters
-    public static void echoServer(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
-        //Creating our BufferedReader and DatagramPacket
-        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-        DatagramPacket sendPacket, recPacket;
-        String incomingMesg;
+			//Getting the input from the user for their choice
+			select = Integer.parseInt(userInput.readLine());
 
-        //Our buffer
-        byte[] buf = new byte[buflen];
+			//Call the appropriate method based on user selection
+			//Values based on text menu above
+			//Any number other than 1-4 will show user error message and ask again
+			if (select == 1) {
+				echoServer(clientSocket, IPAddress);
+			} else if (select == 2) {
+				dnsLookup(clientSocket, IPAddress);
+			} else if (select == 3) {
+				serverTime(clientSocket, IPAddress);
+			} else if (select == 4) {
+				System.exit(0);
+			} else {
+				System.out.println("You must enter 1, 2, 3, or 4.\n");
+			}
+		}
 
-        //Setting the first char of the buffer to 1
-        buf = ("1").trim().getBytes();
+	}
 
-        //This will get the server ready to do what we want
-        sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
-        clientSocket.send(sendPacket);
+	//Code that requests the echo service from server
+	public static void echoServer(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
+		
+		//Creating our BufferedReader and DatagramPacket
+		BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+		DatagramPacket sendPacket, recPacket;
+		String incomingMesg;
 
-        //This will clear our buffer to get it ready for the message
-        Arrays.fill(buf, (byte)0);
+		//Our buffer
+		byte[] buf = new byte[buflen];
 
-        //Prompting the user for input
-        System.out.print("Enter message: ");
+		//Setting the first char of the buffer to 1
+		buf = ("1").trim().getBytes();
 
-        //Storing the user's input in buf
-        buf = userInput.readLine().trim().getBytes();
+		//This will get the server ready to do what we want
+		sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
+		clientSocket.send(sendPacket);
 
-        //Sending the user's input to the server
-        sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
-        clientSocket.send(sendPacket);
+		//This will clear/reset our buffer to get it ready for the message
+		buf = new byte[buflen];
 
-        //Clearing the buffer
-        Arrays.fill(buf, (byte)0);
-        
-        //Receiving the input back from ther server
-        recPacket = new DatagramPacket(buf, buf.length);
-        clientSocket.receive(recPacket);
-        
-        //Turning the bytes back into a string
-        incomingMesg = new String(recPacket.getData());
-        System.out.println("Received from the server: " + incomingMesg + "\n");
-    }
-    public static void dnsLookup(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
-        //Creating our BufferedReader and DatagramPackets for sending and receiving
-        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-        DatagramPacket sendPacket, recPacket;
-        String incomingMesg;
+		//Prompting the user for input
+		System.out.print("\nEnter message to send: ");
 
-        //This is our buffer
-        byte[] buf = new byte[buflen];
+		//Storing the user's input in buf
+		buf = userInput.readLine().trim().getBytes();
 
-        //setting the first char of the buffer to 2 so the server knows what to do
-        buf = ("2").trim().getBytes();
+		//Sending the user's input to the server
+		sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
+		clientSocket.send(sendPacket);
 
-        //Sending the command to the server
-        sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
-        clientSocket.send(sendPacket);
+		//Resetting the buffer for use again
+		buf = new byte[buflen];
 
-        //Clearing the buffer
-        Arrays.fill(buf, (byte)0);
+		//Receiving the input back from the server
+		recPacket = new DatagramPacket(buf, buf.length);
+		clientSocket.receive(recPacket);
 
-        //Prompting the user for input
-        System.out.print("Enter the domain you would like to look up: ");
+		//Turning the bytes back into a string
+		incomingMesg = new String(recPacket.getData());
+		System.out.println(" Returned from server: " + incomingMesg + "\n");
+	}
+	
+	//Code that requests the DNS lookup 
+	public static void dnsLookup(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
+		
+		//Creating our BufferedReader and DatagramPackets for sending and receiving
+		BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+		DatagramPacket sendPacket, recPacket;
+		String incomingMesg;
 
-        //Storing the user's input
-        buf = userInput.readLine().trim().getBytes();
+		//This is our buffer
+		byte[] buf = new byte[buflen];
 
-        //Sending the user's input to the server
-        sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
-        clientSocket.send(sendPacket);
+		//setting the first char of the buffer to 2 so the server knows what to do
+		buf = ("2").trim().getBytes();
 
-        //Clearing the buffer
-        Arrays.fill(buf, (byte)0);
+		//Sending the command to the server
+		sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
+		clientSocket.send(sendPacket);
 
-        //Receiving the packet from the server
-        recPacket = new DatagramPacket(buf, buf.length);
-        clientSocket.receive(recPacket);
+		//Clearing/resetting the buffer
+		buf = new byte[buflen];
 
-        //Turning back into a string
-        incomingMesg = new String(recPacket.getData());
-        System.out.println("Your address resolved to " + incomingMesg);
+		//Prompting the user for input
+		System.out.print("\nURL to look up: ");
 
-    }
-    public static void serverTime(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
-        //Creating our BufferedReader and DatagramPackets for sending and receiving
-        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-        DatagramPacket sendPacket, recPacket;
-        String incomingMesg;
+		//Storing the user's input
+		buf = userInput.readLine().trim().getBytes();
 
-        //This is our buffer
-        byte[] buf = new byte[buflen];
+		//Sending the user's input to the server
+		sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
+		clientSocket.send(sendPacket);
 
-        //setting the first char of the buffer to 3 so the server knows what to do
-        buf = ("3").trim().getBytes();
+		//Clearing/resetting the buffer
+		buf = new byte[buflen];
 
-        //Seding the command to the server
-        sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
-        clientSocket.send(sendPacket);
+		//Receiving the packet from the server
+		recPacket = new DatagramPacket(buf, buf.length);
+		clientSocket.receive(recPacket);
 
-        //Clearing the buffer
-        Arrays.fill(buf, (byte)0);
+		//Turning back into a string
+		incomingMesg = new String(recPacket.getData());
+		System.out.println(" The URL IP is: " + incomingMesg + "\n");
 
-        //Receiving the packet from the server
-        recPacket = new DatagramPacket(buf, buf.length);
-        clientSocket.receive(recPacket);
+	}
+	
+	//Code that requests the server time
+	public static void serverTime(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
+		
+		//Need to send out a packet and receive from server
+		DatagramPacket sendPacket, recPacket;
+		String incomingMesg;
 
-        //Turning back into a string
-        incomingMesg = new String(recPacket.getData());
-        System.out.println("The time is: " + incomingMesg);
-    }
+		//This is our buffer
+		byte[] buf = new byte[buflen];
+
+		//setting the first char of the buffer to 3 so the server knows what to do
+		buf = ("3").trim().getBytes();
+
+		//Sending the command to the server
+		sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
+		clientSocket.send(sendPacket);
+
+		//Reset buffer to clear it and have enough room to store time
+		buf = new byte[buflen];
+
+		//Receiving the packet from the server
+		recPacket = new DatagramPacket(buf, buf.length);
+		clientSocket.receive(recPacket);
+
+		//Turning back into a string
+		incomingMesg = new String(recPacket.getData());
+		System.out.println("\nThe server time is: " + incomingMesg + "\n");
+	}
 }
