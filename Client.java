@@ -137,6 +137,30 @@ public class Client{
 
     }
     public static void serverTime(DatagramSocket clientSocket, InetAddress IPAddress) throws IOException{
+        //Creating our BufferedReader and DatagramPackets for sending and receiving
+        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+        DatagramPacket sendPacket, recPacket;
+        String incomingMesg;
 
+        //This is our buffer
+        byte[] buf = new byte[buflen];
+
+        //setting the first char of the buffer to 3 so the server knows what to do
+        buf = ("3").trim().getBytes();
+
+        //Seding the command to the server
+        sendPacket = new DatagramPacket(buf, buf.length, IPAddress, port);
+        clientSocket.send(sendPacket);
+
+        //Clearing the buffer
+        Arrays.fill(buf, (byte)0);
+
+        //Receiving the packet from the server
+        recPacket = new DatagramPacket(buf, buf.length);
+        clientSocket.receive(recPacket);
+
+        //Turning back into a string
+        incomingMesg = new String(recPacket.getData());
+        System.out.println("The time is: " + incomingMesg);
     }
 }
